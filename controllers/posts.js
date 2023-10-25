@@ -4,7 +4,7 @@ import Comment from "../models/Comment.js";
 import path, { dirname } from 'path'
 import { fileURLToPath } from 'url'
 import fs from 'fs';
-import { fromBuffer } from 'file-type';
+import { fileTypeFromBuffer } from 'file-type';
 
 import sharp from 'sharp';
 
@@ -18,7 +18,7 @@ export const createPost = async (req, res) => {
       const image = req.files.image;
       const buffer = image.data;
 
-      const type = await fromBuffer(buffer);
+      const type = await fileTypeFromBuffer(buffer);
       if (!type || (type.mime !== 'image/png' && type.mime !== 'image/jpeg')) {
         return res.status(400).json({ message: 'Допустимы только файлы в формате PNG или JPEG.' });
       }
