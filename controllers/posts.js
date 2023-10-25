@@ -3,58 +3,71 @@ import User from "../models/User.js";
 import Comment from "../models/Comment.js";
 import path, { dirname } from 'path'
 import { fileURLToPath } from 'url'
+import fs from 'fs';
+import fileType from 'file-type';
+import sharp from 'sharp';
 
 // create post
 export const createPost = async (req, res) => {
   try {
-    // ожидаем и получаем от клиента title и text
-    const { title, text } = req.body
+    const { title, text } = req.body;
+    const user = await User.findById(req.userId);
 
-    // получаем юзера через userId
-    const user = await User.findById(req.userId)
-
-    // проверяем если картина есть 
     if (req.files) {
-      let fileName = Date.now().toString() + req.files.image.name
-      const __dirname = dirname(fileURLToPath(import.meta.url))
-      req.files.image.mv(path.join(__dirname, '..', 'uploads', fileName))
+      const image = req.files.image;
+      const buffer = image.data;
 
-      // создаем новый пост с картинками
+      const type = await fileType.fromBuffer(buffer);
+      if (!type || (type.mime !== 'image/png' && type.mime !== 'image/jpeg')) {
+        return res.status(400).json({ message: 'Допустимы только файлы в формате PNG или JPEG.' });
+      }
+
+      const optimizedBuffer = await sharp(buffer)
+        .resize(800)
+        .toFormat(type.ext)
+        .toBuffer();
+
+      const fileName = Date.now().toString() + req.files.image.name;
+      const __dirname = dirname(fileURLToPath(import.meta.url));
+      
+      fs.writeFileSync(path.join(__dirname, '..', 'uploads', fileName), optimizedBuffer);
+
       const newPostWithImage = new Post({
         username: user.username,
         title,
         text,
         imgUrl: fileName,
         author: req.userId,
-      })
-      // сохраняем пост
-      await newPostWithImage.save()
-      // и добавляем пост на юзера на массив posts
-
+      });
+      
+      await newPostWithImage.save();
       await User.findByIdAndUpdate(req.userId, {
         $push: { posts: newPostWithImage },
-      })
-      return res.json(newPostWithImage)
+      });
+      
+      return res.json(newPostWithImage);
     }
 
-    // добавляем без картины
+    // Если изображение отсутствует, обрабатываем пост без изображения
     const newPostWithoutImage = new Post({
       username: user.username,
       title,
       text,
       imgUrl: '',
       author: req.userId,
-    })
-    await newPostWithoutImage.save()
+    });
+    
+    await newPostWithoutImage.save();
     await User.findByIdAndUpdate(req.userId, {
       $push: { posts: newPostWithoutImage },
-    })
+    });
 
-    res.json(newPostWithoutImage)
+    res.json(newPostWithoutImage);
   } catch (error) {
-    res.json({ message: 'Что-то пошло не так.' })
+    res.json({ message: 'Что-то пошло не так.' });
   }
-}
+};
+
 
 export const getAll = async (req, res) => {
   try {

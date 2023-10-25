@@ -16,8 +16,10 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-fileupload": "^1.4.1",
+    "file-type": "^18.5.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^7.6.3"
+    "mongoose": "^7.6.3",
+    "sharp": "^0.32.6"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

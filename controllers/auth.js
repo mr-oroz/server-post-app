@@ -13,7 +13,7 @@ export const register = async (req, res) => {
 
     // проверяем регистрация
     if (isUsed) {
-      return res.json({
+      return res.status(400).json({
         message: 'Данный username уже занят.',
       })
     }
@@ -42,14 +42,14 @@ export const register = async (req, res) => {
     await newUser.save()
     
     // желательно отправляем при регистраци данных и токен чтобы после регистрация сразу авторизовался 
-    res.json({
+    res.status(200).json({
       newUser,
       message: 'Регистрация прошла успешно.',
       token
     })
   } catch (error) {
     //console.error("Error:", error);
-    res.json({
+    res.status(500).json({
       message: 'Ошибка при создании пользователя.',
       error: error.message
     })
@@ -67,7 +67,7 @@ export const login = async (req, res) => {
 
 
     // проверяем 
-    if (!user) res.json({ message: 'Такого юзера не существует.' });
+    if (!user) res.status(400).json({ message: 'Такого юзера не существует.' });
 
     // получаем пароль проверяем пароль если правильно
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
@@ -82,11 +82,11 @@ export const login = async (req, res) => {
       { expiresIn: '30d' });
 
     // желательно отправляем при регистраци данных и токен чтобы после войти авторизовался 
-    res.json({
+    res.status(200).json({
       token, user, message: 'Вы успешно авторизовались.'
     });
   } catch (e) {
-    res.json({ message: 'Ошибка при авторизация.' })
+    res.status(500).json({ message: 'Ошибка при авторизация.' })
   }
 }
 
@@ -96,7 +96,7 @@ export const getMe = async (req, res) => {
       
       const user = await User.findById(req.userId)
       if (!user) {
-          return res.json({
+          return res.status(500).json({
               message: 'Такого юзера не существует.',
           })
       }
@@ -109,11 +109,11 @@ export const getMe = async (req, res) => {
           { expiresIn: '30d' },
       )
 
-      res.json({
+      res.status(200).json({
           user,
           token,
       })
   } catch (error) {
-      res.json({ message: 'Нет доступа.' })
+    res.status(500).json({ message: 'Нет доступа.' })
   }
 }
