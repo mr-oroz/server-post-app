@@ -24,6 +24,7 @@ export const createPost = async (req, res) => {
       }
 
       const optimizedBuffer = await sharp(buffer)
+        .rotate() // Доб
         .resize(800)
         .toFormat(type.ext)
         .toBuffer();
